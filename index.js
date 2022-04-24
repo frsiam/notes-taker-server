@@ -1,7 +1,7 @@
 const express = require('express');
 require('dotenv').config()
 const cors = require("cors")
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 4000;
 
@@ -39,21 +39,33 @@ async function run() {
         //           }
         app.post('/note', async (req, res) => {
             const data = req.body;
-            console.log(data);
+            console.log('from post or creat new notes api', data);
 
             const result = await notesCollection.insertOne(data);
             res.send(result);
         })
 
         // Update notes
-        app.put('/note/:id', async (req, rse) => {
+        app.put('/note/:id', async (req, res) => {
             const id = req.params.id;
-            console.log('from put', id);
-            const result = await notesCollection.updateOne(id)
-            res.send(id)
+            const filter = { _id: ObjectId(id) };
+            const data = req.body;
+            console.log('from updata api', data)
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: data
+            };
+            const result = await notesCollection.updateOne(filter, updateDoc, options);
+            res.send(result)
         })
 
         // Delete notes
+        app.delete('/note/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await notesCollection.deleteOne(query);
+            res.send(result);
+        })
     }
     finally {
 
